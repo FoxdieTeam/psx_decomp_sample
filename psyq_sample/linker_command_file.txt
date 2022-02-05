@@ -1,0 +1,37 @@
+; This is like a linker script for psylink but with some crazy custom syntax.
+; Older psylinks will also explode with too many sections/objects etc. 
+; "SLink" seems to mostly fix this though. If it changes codegen or not is unknown.
+
+	org	$80010000			; main load address
+
+text	group				; main text group
+bss	group	bss				; main data group
+
+over1 group file("overlay1.bin")
+
+over2	group	over(over1), file("overlay2.bin")
+
+
+	section	.rdata,text	; main sections
+	section	.text,text
+	section	.data,text
+	section	.sdata,text
+	section	.sbss,bss
+	section	.bss,bss
+
+	include gOverlayFunctions.obj
+
+	; Main exe code
+	include	main.obj
+	include another_tu.obj
+
+	; Overlay code
+	include overlay1.obj
+	include overlay2.obj
+
+	; psyq libs
+	inclib	"C:\data\mgs_rev\psyq\psyq_4.4\lib\libsn.lib" 	; sn entry stuff
+	inclib	"C:\data\mgs_rev\psyq\psyq_4.4\lib\libc.lib" 	; printf
+	inclib	"C:\data\mgs_rev\psyq\psyq_4.4\lib\libapi.lib" 	; initheap
+
+	regs	pc=__SN_ENTRY_POINT	; entry point
