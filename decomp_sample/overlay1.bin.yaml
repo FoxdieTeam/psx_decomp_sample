@@ -18,7 +18,6 @@ options:
   use_legacy_include_asm: False
   use_function_labels: yes
 segments:
-  - [0x0, bin, none]
   - name: main
     type: code
     start: 0x00000000
@@ -26,7 +25,7 @@ segments:
     subalign: 4
     subsegments:
       - [0x0, rodata, rdata]
-      - [0xD8, asm, code]
+      - [0xD8, asm, text]
       - [0x230, data, data]
       - [0x27C, data, sdata]
       - [0x288, data, sbss]
