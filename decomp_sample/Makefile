@@ -1,0 +1,175 @@
+OUTPUT_EXE_BASENAME  := output.exe
+OVERLAY1_BASENAME    := overlay1.bin
+OVERLAY2_BASENAME    := overlay2.bin
+
+BUILD_DIR         := build
+TOOLS_DIR         := tools
+
+OUTPUT_EXE_DIR    := $(OUTPUT_EXE_BASENAME)
+OVERLAY1_DIR      := $(OVERLAY1_BASENAME)
+OVERLAY2_DIR      := $(OVERLAY2_BASENAME)
+
+OUTPUT_EXE_ASM_DIR     := asm/$(OUTPUT_EXE_DIR)
+OUTPUT_EXE_ASM_DIRS    := $(OUTPUT_EXE_ASM_DIR) $(OUTPUT_EXE_ASM_DIR)/data
+
+OVERLAY1_ASM_DIR       := asm/$(OVERLAY1_DIR)
+OVERLAY1_ASM_DIRS      := $(OVERLAY1_ASM_DIR) $(OVERLAY1_ASM_DIR)/data
+OVERLAY2_ASM_DIR       := asm/$(OVERLAY2_DIR)
+OVERLAY2_ASM_DIRS      := $(OVERLAY2_ASM_DIR) $(OVERLAY2_ASM_DIR)/data
+
+
+OUTPUT_EXE_C_DIR       := src/$(OUTPUT_EXE_DIR)
+OUTPUT_EXE_C_DIRS      := $(OUTPUT_EXE_C_DIR)
+
+OVERLAY1_C_DIR         := src/$(OVERLAY1_DIR)
+OVERLAY1_C_DIRS        := $(OVERLAY1_C_DIR)
+OVERLAY2_C_DIR         := src/$(OVERLAY2_DIR)
+OVERLAY2_C_DIRS        := $(OVERLAY2_C_DIR)
+
+
+OUTPUT_EXE_ASSETS_DIR  := assets/$(OUTPUT_EXE_DIR)
+OUTPUT_EXE_BIN_DIRS    := $(OUTPUT_EXE_ASSETS_DIR)
+
+OVERLAY1_ASSETS_DIR  := assets/$(OVERLAY1_DIR)
+OVERLAY1_BIN_DIRS    := $(OVERLAY1_ASSETS_DIR)
+OVERLAY2_ASSETS_DIR  := assets/$(OVERLAY2_DIR)
+OVERLAY2_BIN_DIRS    := $(OVERLAY2_ASSETS_DIR)
+
+
+OUTPUT_EXE_TARGET      := $(BUILD_DIR)/$(OUTPUT_EXE_BASENAME)
+OVERLAY1_TARGET        := $(BUILD_DIR)/$(OVERLAY1_BASENAME)
+OVERLAY2_TARGET        := $(BUILD_DIR)/$(OVERLAY2_BASENAME)
+
+OUTPUT_EXE_S_FILES     := $(foreach dir,$(OUTPUT_EXE_ASM_DIRS),$(wildcard $(dir)/*.s))
+OUTPUT_EXE_C_FILES     := $(foreach dir,$(OUTPUT_EXE_C_DIRS),$(wildcard $(dir)/*.c))
+OUTPUT_EXE_BIN_FILES   := $(foreach dir,$(OUTPUT_EXE_BIN_DIRS),$(wildcard $(dir)/*.bin))
+
+OVERLAY1_S_FILES     := $(foreach dir,$(OVERLAY1_ASM_DIRS),$(wildcard $(dir)/*.s))
+OVERLAY1_C_FILES     := $(foreach dir,$(OVERLAY1_C_DIRS),$(wildcard $(dir)/*.c))
+OVERLAY1_BIN_FILES   := $(foreach dir,$(OVERLAY1_BIN_DIRS),$(wildcard $(dir)/*.bin))
+
+OVERLAY2_S_FILES     := $(foreach dir,$(OVERLAY2_ASM_DIRS),$(wildcard $(dir)/*.s))
+OVERLAY2_C_FILES     := $(foreach dir,$(OVERLAY2_C_DIRS),$(wildcard $(dir)/*.c))
+OVERLAY2_BIN_FILES   := $(foreach dir,$(OVERLAY2_BIN_DIRS),$(wildcard $(dir)/*.bin))
+
+OUTPUT_EXE_O_FILES     := $(foreach file,$(OUTPUT_EXE_S_FILES),$(BUILD_DIR)/$(file).o) \
+                   $(foreach file,$(OUTPUT_EXE_C_FILES),$(BUILD_DIR)/$(file).o) \
+                   $(foreach file,$(OUTPUT_EXE_BIN_FILES),$(BUILD_DIR)/$(file).o)
+
+OVERLAY1_O_FILES     := $(foreach file,$(OVERLAY1_S_FILES),$(BUILD_DIR)/$(file).o) \
+                   $(foreach file,$(OVERLAY1_C_FILES),$(BUILD_DIR)/$(file).o) \
+                   $(foreach file,$(OVERLAY1_BIN_FILES),$(BUILD_DIR)/$(file).o)
+
+OVERLAY2_O_FILES     := $(foreach file,$(OVERLAY2_S_FILES),$(BUILD_DIR)/$(file).o) \
+                   $(foreach file,$(OVERLAY2_C_FILES),$(BUILD_DIR)/$(file).o) \
+                   $(foreach file,$(OVERLAY2_BIN_FILES),$(BUILD_DIR)/$(file).o)
+
+MAKE            := make
+PYTHON          := python3
+WINE            := wine
+SED             := sed
+UNIX2DOS        := unix2dos
+GREP            := grep
+
+# default noop
+TRUNCATE        := echo
+
+CPP             := cpp -P
+CC              := mips-linux-gnu-gcc
+CC_FLAGS        := -EL -c -O2 -march=r3000 -mfp32 -mno-abicalls
+
+CROSS           := mips-linux-gnu-
+AS              := $(CROSS)as -EL
+LD              := $(CROSS)ld -EL
+OBJCOPY         := $(CROSS)objcopy
+
+SPLAT           := $(PYTHON) $(TOOLS_DIR)/splat/split.py
+
+AS_INCLUDES     := -Iinclude
+AS_FLAGS        := -march=r3000 -mtune=r3000 -no-pad-sections
+AS_FLAGS        += -G0
+AS_FLAGS        += $(AS_INCLUDES)
+
+OVERLAY1_LD_FLAGS    := -Map $(OVERLAY1_TARGET).map -T $(OVERLAY1_BASENAME).ld \
+                   -T undefined_syms_auto.$(OVERLAY1_BASENAME).txt -T undefined_funcs_auto.$(OVERLAY1_BASENAME).txt -T undefined_syms.$(OVERLAY1_BASENAME).txt \
+                   --no-check-sections
+
+OVERLAY2_LD_FLAGS    := -Map $(OVERLAY2_TARGET).map -T $(OVERLAY2_BASENAME).ld \
+                   -T undefined_syms_auto.$(OVERLAY2_BASENAME).txt -T undefined_funcs_auto.$(OVERLAY2_BASENAME).txt -T undefined_syms.$(OVERLAY2_BASENAME).txt \
+                   --no-check-sections
+
+OUTPUT_EXE_LD_FLAGS    := -Map $(OUTPUT_EXE_TARGET).map -T $(OUTPUT_EXE_BASENAME).ld \
+                   -T undefined_syms_auto.$(OUTPUT_EXE_BASENAME).txt -T undefined_funcs_auto.$(OUTPUT_EXE_BASENAME).txt -T undefined_syms.$(OUTPUT_EXE_BASENAME).txt \
+                   --no-check-sections --allow-multiple-definition
+
+
+OBJCOPY_FLAGS   := -O binary
+
+# overrides
+# targets
+
+default: output_exe overlay1 overlay2
+
+all: output_exe overlay1 overlay2
+
+output_exe: output_exe_dirs verify_output_exe
+overlay1: overlay1_dirs verify_overlay1
+overlay2: overlay2_dirs verify_overlay2
+
+output_exe_dirs:
+	$(foreach dir,$(OUTPUT_EXE_ASM_DIRS) $(OUTPUT_EXE_BIN_DIRS) $(OUTPUT_EXE_C_DIRS),$(shell mkdir -p $(BUILD_DIR)/$(dir)))
+
+overlay1_dirs:
+	$(foreach dir,$(OVERLAY1_ASM_DIRS) $(OVERLAY1_BIN_DIRS) $(OVERLAY1_C_DIRS),$(shell mkdir -p $(BUILD_DIR)/$(dir)))
+
+overlay2_dirs:
+	$(foreach dir,$(OVERLAY2_ASM_DIRS) $(OVERLAY2_BIN_DIRS) $(OVERLAY2_C_DIRS),$(shell mkdir -p $(BUILD_DIR)/$(dir)))
+
+check: check_output_exe check_overlay1 check_overlay2
+check_output_exe: $(OUTPUT_EXE_BASENAME).ok
+check_overlay1: $(OVERLAY1_BASENAME).ok
+check_overlay2: $(OVERLAY2_BASENAME).ok
+
+verify: verify_output_exe verify_overlay1 verify_overlay2
+
+verify_output_exe: $(OUTPUT_EXE_TARGET).ok
+verify_overlay1: $(OVERLAY1_TARGET).ok
+verify_overlay2: $(OVERLAY2_TARGET).ok
+
+clean:
+	rm -rf $(BUILD_DIR)
+
+# recipes
+
+$(OUTPUT_EXE_TARGET).elf: $(OUTPUT_EXE_O_FILES)
+	$(LD) $(OUTPUT_EXE_LD_FLAGS) -o $@
+
+$(OVERLAY1_TARGET).elf: $(OVERLAY1_O_FILES)
+	$(LD) $(OVERLAY1_LD_FLAGS) -o $@
+
+$(OVERLAY2_TARGET).elf: $(OVERLAY2_O_FILES)
+	$(LD) $(OVERLAY2_LD_FLAGS) -o $@
+
+%.bin: %.elf
+	$(OBJCOPY) $(OBJCOPY_FLAGS) $< $@
+	@$(TRUNCATE) $@
+
+$(BUILD_DIR)/%.s.o: %.s
+	$(AS) $(AS_FLAGS) -o $@ $<
+
+$(BUILD_DIR)/%.bin.o: %.bin
+	$(LD) -r -b binary -o $@ $<
+
+#$(BUILD_DIR)/%.c.o: %.c
+#	/mnt/c/data/mgs_rev/pcsx-redux/tools/psyq-obj-parser/build/Debug/psyq-objparser.exe c:/users/admin/Downloads/sound.tar/sound/src/mgsi/map.obj -o c:/users/admin/Downloads/sound.tar/sound/src/mgsi/map_elf.o
+#	cp /mnt/c/users/admin/Downloads/sound.tar/sound/src/mgsi/map_elf.o /mnt/c/users/admin/Downloads/sound.tar/sound/build/src/mgsi/map.c.o
+
+%.ok: %.bin
+	@echo "$$(cat $(notdir $(<:.bin=)).sha1)  $<" | sha1sum --check
+	@touch $@
+
+# keep .obj files
+.SECONDARY:
+
+.PHONY: all clean default
+SHELL = /bin/bash -e -o pipefail
