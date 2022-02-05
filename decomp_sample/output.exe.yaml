@@ -1,6 +1,6 @@
 options:
   platform:     psx
-  basename:     output
+  basename:     output.exe
   base_path:    .
   target_path:  ../psyq_sample/binaries/output.exe
   asm_path:     asm/output.exe
@@ -31,4 +31,5 @@ segments:
       - [0x1034, data, sdata]
       - [0x1040, data, sbss]
       - [0x104C, data]
-  - [0x17FF]
+  - [0x10A0, bin]
+  - [0x1800] # ps-exe sector padding
