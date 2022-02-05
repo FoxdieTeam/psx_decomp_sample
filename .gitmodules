@@ -1,0 +1,3 @@
+[submodule "3rdParty/splat"]
+	path = 3rdParty/splat
+	url = https://github.com/ethteck/splat.git

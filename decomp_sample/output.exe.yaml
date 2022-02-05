@@ -1,0 +1,34 @@
+options:
+  platform:     psx
+  basename:     output
+  base_path:    .
+  target_path:  ../psyq_sample/binaries/output.exe
+  asm_path:     asm/output.exe
+  asset_path:   assets/output.exe
+  src_path:     src/output.exe
+  asm_endlabels: yes
+  # compiler
+  compiler: GCC
+  # disasm/linker
+  symbol_addrs_path:    symbol_addrs.output.exe.txt
+  undefined_syms_path:  undefined_syms.output.exe.txt
+  undefined_funcs_auto_path:  undefined_funcs_auto.output.exe.txt
+  undefined_syms_auto_path:   undefined_syms_auto.output.exe.txt
+  find_file_boundaries: yes
+  use_legacy_include_asm: False
+  use_function_labels: yes
+segments:
+  - [0x0, bin, psx_exe_header] # header, 0x0 - 0x800
+  - name: main
+    type: code
+    start: 0x00000800
+    vram:  0x80010000
+    subalign: 4
+    subsegments:
+      - [0x800, rodata, rdata]
+      - [0xA3C, asm]
+      - [0xFBC, data, data]
+      - [0x1034, data, sdata]
+      - [0x1040, data, sbss]
+      - [0x104C, data]
+  - [0x17FF]
