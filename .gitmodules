@@ -1,3 +1,6 @@
 [submodule "3rdParty/splat"]
 	path = 3rdParty/splat
 	url = https://github.com/ethteck/splat.git
+[submodule "3rdParty/asm-differ"]
+	path = 3rdParty/asm-differ
+	url = https://github.com/simonlindholm/asm-differ.git

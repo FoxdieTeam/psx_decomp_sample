@@ -160,9 +160,10 @@ $(BUILD_DIR)/%.s.o: %.s
 $(BUILD_DIR)/%.bin.o: %.bin
 	$(LD) -r -b binary -o $@ $<
 
-#$(BUILD_DIR)/%.c.o: %.c
-#	/mnt/c/data/mgs_rev/pcsx-redux/tools/psyq-obj-parser/build/Debug/psyq-objparser.exe c:/users/admin/Downloads/sound.tar/sound/src/mgsi/map.obj -o c:/users/admin/Downloads/sound.tar/sound/src/mgsi/map_elf.o
-#	cp /mnt/c/users/admin/Downloads/sound.tar/sound/src/mgsi/map_elf.o /mnt/c/users/admin/Downloads/sound.tar/sound/build/src/mgsi/map.c.o
+$(BUILD_DIR)/%.c.o: %.c
+	echo $@ $<
+	/mnt/c/data/mgs_rev/pcsx-redux/tools/psyq-obj-parser/build/Debug/psyq-objparser.exe C:/data/mgs_rev/psx_decomp_example/decomp_sample/src/overlay1.bin/func_80010A4C.obj -o C:/data/mgs_rev/psx_decomp_example/decomp_sample/src/overlay1.bin/func_80010A4C.o
+	cp /mnt/c/data/mgs_rev/psx_decomp_example/decomp_sample/src/overlay1.bin/func_80010A4C.o /mnt/c/data/mgs_rev/psx_decomp_example/decomp_sample/build/src/overlay1.bin/func_80010A4C.c.o
 
 %.ok: %.bin
 	@echo "$$(cat $(notdir $(<:.bin=)).sha1)  $<" | sha1sum --check
