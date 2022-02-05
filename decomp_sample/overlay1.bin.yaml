@@ -26,8 +26,8 @@ segments:
     subalign: 4
     subsegments:
       - [0xD8, asm, code]
-      - [0x230, bin, data]
-      - [0x27C, bin, sdata]
-      - [0x288, bin, sbss]
-      - [0x28C, bin, bss]
+      - [0x230, data, data]
+      - [0x27C, data, sdata]
+      - [0x288, data, sbss]
+      - [0x28C, data, bss]
   - [0x2DC] # end of file
