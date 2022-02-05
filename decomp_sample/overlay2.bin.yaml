@@ -1,0 +1,31 @@
+options:
+  platform:     psx
+  basename:     overlay2.bin
+  base_path:    .
+  target_path:  ../psyq_sample/binaries/overlay2.bin
+  asm_path:     asm/overlay2.bin
+  asset_path:   assets/overlay2.bin
+  src_path:     src/overlay2.bin
+  asm_endlabels: yes
+  # compiler
+  compiler: GCC
+  # disasm/linker
+  symbol_addrs_path:    symbol_addrs.overlay2.bin.txt
+  undefined_syms_path:  undefined_syms.overlay2.bin.txt
+  undefined_funcs_auto_path:  undefined_funcs_auto.overlay2.bin.txt
+  undefined_syms_auto_path:   undefined_syms_auto.overlay2.bin.txt
+  find_file_boundaries: yes
+  use_legacy_include_asm: False
+  use_function_labels: yes
+segments:
+  - [0x0, bin, rodata]
+  - name: main
+    type: code
+    start: 0x00000108
+    vram:  0x800109A8
+    subalign: 4
+    subsegments:
+      - [0x108, asm, code]
+      - [0x2CC, data, data1]
+      - [0x2D0, data, data2]
+  - [0x2D4] # end of file
