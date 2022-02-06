@@ -108,6 +108,7 @@ OBJCOPY_FLAGS   := -O binary
 # overrides
 # targets
 
+# first target to appear is "default" don't swap the order
 default: output_exe overlay1 overlay2
 
 all: output_exe overlay1 overlay2
@@ -138,6 +139,7 @@ verify_overlay2: $(OVERLAY2_TARGET).ok
 
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -f $(PSYQ_INI)
 
 # recipes
 
@@ -160,10 +162,42 @@ $(BUILD_DIR)/%.s.o: %.s
 $(BUILD_DIR)/%.bin.o: %.bin
 	$(LD) -r -b binary -o $@ $<
 
-$(BUILD_DIR)/%.c.o: %.c
+
+PROC_VERSION != uname -a
+IS_WSL := $(findstring microsoft,$(PROC_VERSION)) $(findstring Microsoft,$(PROC_VERSION))
+ifneq ($(IS_WSL),)
+	WSL := no
+else
+	WSL := yes
+endif
+
+PSYQ_PATH_ABS := $(realpath ../3rdParty/psyq_sdk/psyq_4.4/bin)
+
+export PSYQ_PATH := $(PSYQ_PATH_ABS)
+export WSLENV := PSYQ_PATH/p
+
+PSYQ_INI := $$PSYQ_PATH\\psyq.ini
+
+$(PSYQ_INI):
+	echo [ccpsx] > $(PSYQ_INI)
+	echo stdlib=libgs.lib libgte.lib libgpu.lib libspu.lib libsnd.lib libetc.lib libapi.lib libsn.lib libc.lib libcd.lib libcard.lib >> $(PSYQ_INI)
+	echo compiler_path=$(PSYQ_PATH_ABS)\\bin >> $(PSYQ_INI)
+	echo assembler_path=$(PSYQ_PATH_ABS)\\bin >> $(PSYQ_INI)
+	echo linker_path=$(PSYQ_PATH_ABS)\\bin >> $(PSYQ_INI)
+	echo library_path=$(PSYQ_PATH_ABS)\\lib >> $(PSYQ_INI)
+	echo c_include_path=$(PSYQ_PATH_ABS)\\include >> $(PSYQ_INI)
+	echo cplus_include_path=$(PSYQ_PATH_ABS)\\include >> $(PSYQ_INI)
+
+$(BUILD_DIR)/%.c.obj: %.c $(PSYQ_INI)
 	echo $@ $<
-	/mnt/c/data/mgs_rev/pcsx-redux/tools/psyq-obj-parser/build/Debug/psyq-objparser.exe C:/data/mgs_rev/psx_decomp_example/decomp_sample/src/overlay1.bin/func_80010A4C.obj -o C:/data/mgs_rev/psx_decomp_example/decomp_sample/src/overlay1.bin/func_80010A4C.o
-	cp /mnt/c/data/mgs_rev/psx_decomp_example/decomp_sample/src/overlay1.bin/func_80010A4C.o /mnt/c/data/mgs_rev/psx_decomp_example/decomp_sample/build/src/overlay1.bin/func_80010A4C.c.o
+	@echo $$PATH
+	@echo $$PSX_PATH
+	@echo $$PSYQ_PATH
+	../3rdParty/psyq_sdk/psyq_4.4/bin/ccpsx.exe -O2 -G 0 -g -c -Wall "$<" "-o$@"
+
+$(BUILD_DIR)/%.c.o: $(BUILD_DIR)/%.c.obj
+	echo $@ $<
+	../3rdParty/psyq-objparser.exe $< -o $@
 
 %.ok: %.bin
 	@echo "$$(cat $(notdir $(<:.bin=)).sha1)  $<" | sha1sum --check
