@@ -4,3 +4,6 @@
 [submodule "3rdParty/asm-differ"]
 	path = 3rdParty/asm-differ
 	url = https://github.com/simonlindholm/asm-differ.git
+[submodule "3rdParty/psyq_sdk"]
+	path = 3rdParty/psyq_sdk
+	url = https://github.com/FoxdieTeam/psyq_sdk.git
