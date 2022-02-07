@@ -190,10 +190,8 @@ $(PSYQ_INI):
 
 PSYQ_CC_FLAGS        := -O2 -G 0 -g -c -Wall
 
-# python3 ../tools/asm-processor/asm_processor.py -O2 ../src/rocket/codeseg0/codeseg0.c > codeseg0.c
-# python3 ../tools/asm-processor/asm_processor.py -O2 ../src/rocket/codeseg0/codeseg0.c --post-process codeseg0.o --assembler "mips-linux-gnu-as -EB -mtune=vr4300 -march=vr4300 -mabi=32 -I../include -mips3" --asm-prelude ../tools/asm-processor/prelude.inc
-#  $(PSYQ_INI)
-$(BUILD_DIR)/%.c.o: %.c
+
+$(BUILD_DIR)/%.c.o: %.c $(PSYQ_INI)
 	echo $@ $<
 	@echo $$PATH
 	@echo $$PSX_PATH
@@ -203,10 +201,6 @@ $(BUILD_DIR)/%.c.o: %.c
 	../3rdParty/psyq_sdk/psyq_4.4/bin/ccpsx.exe -O2 -G 0 -g -c -Wall meh.c "-o$@.obj"
 	../3rdParty/psyq-objparser.exe $@.obj -o $@
 	python3 ../3rdParty/asm-processor/asm_processor.py -O2 $< --post-process $@ --assembler "mips-linux-gnu-as -EL -march=r3000 -mtune=r3000 -no-pad-sections -G0 -I../include -mips1" --asm-prelude ../3rdParty/asm-processor/prelude.inc
-
-#$(BUILD_DIR)/%.c.o: $(BUILD_DIR)/%.c.obj
-#	echo $@ $<
-#	../3rdParty/psyq-objparser.exe $< -o $@
 
 %.ok: %.bin
 	@echo "$$(cat $(notdir $(<:.bin=)).sha1)  $<" | sha1sum --check
