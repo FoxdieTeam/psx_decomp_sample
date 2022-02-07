@@ -1,5 +1,5 @@
 
-extern int func_8001079C(const char* format, ...); // printf
+extern int func_8001079C(const char *format, ...); // printf
 
 extern const char D_8001094C[]; // Set .data var to %d
 extern int D_80010B18;

@@ -8,7 +8,7 @@ options:
   src_path:     src/overlay1.bin
   asm_endlabels: yes
   # compiler
-  compiler: GCC
+  compiler: "IDO"
   # disasm/linker
   symbol_addrs_path:    symbol_addrs.overlay1.bin.txt
   undefined_syms_path:  undefined_syms.overlay1.bin.txt
@@ -26,7 +26,9 @@ segments:
     subsegments:
       - [0x0, rodata, rdata]
       - [0xD8, asm]
-      - [0x1AC, c, func_80010A4C]
+      - [0x10C, c, func_800109AC]
+      - [0x140, asm]
+      - [0x1AC, asm, func_80010A4C]
       - [0x1E4, asm]
       - [0x230, data, data]
       - [0x27C, data, sdata]
